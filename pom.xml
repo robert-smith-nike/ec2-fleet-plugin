@@ -107,8 +107,13 @@
     <repository>
       <id>nike.artifactory</id>
       <name>Nike Artifactory Repo</name>
-      <url>https://artifactory.nike.com/artifactory/maven</url>
+      <url>https://artifactory.nike.com/artifactory/blueprint</url>
     </repository>
+    <snapshotRepository>
+      <id>nike.artifactory</id>
+      <name>Nike Artifactory Snapshot Repo</name>
+      <url>https://artifactory.nike.com/artifactory/blueprint-snapshots</url>
+    </snapshotRepository>
   </distributionManagement>
 
 </project>
