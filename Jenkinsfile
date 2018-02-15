@@ -1,3 +1,9 @@
-#!groovy
+@Library('cop-pipeline') _
 
-buildPlugin(jenkinsVersions: [null, '2.60.1'], failFast: false)
+jarLibraryPipeline() {
+    buildImage = 'maven:3.5-jdk-8'
+    buildArtifacts = ['target/*.hpi']
+    buildCmd = 'mvn clean install'
+    testCmd = 'mvn test'
+    publishCmd = 'mvn --settings $(pwd)/settings.xml -Dartifactory.user=$ARTIFACTORY_USER -Dartifactory.password=$ARTIFACTORY_PASSWORD deploy'
+}

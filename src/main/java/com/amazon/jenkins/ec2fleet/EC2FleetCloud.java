@@ -1,8 +1,9 @@
 package com.amazon.jenkins.ec2fleet;
 
 import com.amazon.jenkins.ec2fleet.cloud.FleetNode;
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.DescribeRegionsResult;
@@ -17,17 +18,12 @@ import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.ec2.model.TerminateInstancesResult;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials;
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.google.common.util.concurrent.SettableFuture;
 import hudson.Extension;
-import hudson.model.Computer;
 import hudson.model.Descriptor;
 import hudson.model.Label;
 import hudson.model.Node;
 import hudson.model.TaskListener;
-import hudson.security.ACL;
 import hudson.slaves.Cloud;
 import hudson.slaves.ComputerConnector;
 import hudson.slaves.NodeProperty;
@@ -66,6 +62,7 @@ import java.util.logging.SimpleFormatter;
 public class EC2FleetCloud extends Cloud
 {
     public static final String FLEET_CLOUD_ID="FleetCloud";
+    private static final int CLIENT_MAX_RETRIES = 25;
     private static final SimpleFormatter sf = new SimpleFormatter();
 
     private final String credentialsId;
@@ -417,14 +414,22 @@ public class EC2FleetCloud extends Cloud
 
     private static AmazonEC2 connect(final String credentialsId, final String region) {
 
-        final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(credentialsId, Jenkins.getInstance());
-        final AmazonEC2Client client =
-                credentials != null ?
-                        new AmazonEC2Client(credentials) :
-                        new AmazonEC2Client();
-        if (region != null)
-            client.setEndpoint("https://ec2." + region + ".amazonaws.com/");
-        return client;
+        final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(credentialsId, Jenkins
+                .getInstance());
+
+        final ClientConfiguration clientConfiguration = new ClientConfiguration()
+                .withMaxErrorRetry(CLIENT_MAX_RETRIES)
+                .withThrottledRetries(true);
+
+        final AmazonEC2ClientBuilder clientBuilder = AmazonEC2ClientBuilder.standard()
+                .withRegion(region)
+                .withClientConfiguration(clientConfiguration);
+
+        if (credentials != null) {
+            clientBuilder.setCredentials(credentials);
+        }
+
+        return clientBuilder.build();
     }
 
 

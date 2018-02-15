@@ -103,4 +103,12 @@
     </plugins>
   </build>
 
+  <distributionManagement>
+    <repository>
+      <id>nike.artifactory</id>
+      <name>Nike Artifactory Repo</name>
+      <url>https://artifactory.nike.com/artifactory/maven</url>
+    </repository>
+  </distributionManagement>
+
 </project>
